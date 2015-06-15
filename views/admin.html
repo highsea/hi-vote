@@ -1,0 +1,314 @@
+<% include header.html %>
+
+	<% if (result!='') { %>  
+
+<link rel="stylesheet" type="text/css" href="stylesheets/datatables.min.css">
+
+<div class="container-fluid">
+
+    <div class="row-fluid">
+		<div class="span12">
+			<% include nav.html %>
+			
+		</div>
+	</div>
+
+	<div class="row-fluid">
+		<div class="span12">
+			<div class="tabbable" id="tabs-533320">
+				<ul class="nav nav-tabs">
+					<li class="active">
+						 <a href="#panel-727360" data-toggle="tab">用户账号</a>
+					</li>
+					<li>
+						 <a href="#panel-374630" data-toggle="tab">权限管理</a>
+					</li>
+					<li>
+						 <a href="#panel-374631" data-toggle="tab">马甲账号</a>
+					</li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active" id="panel-727360">
+						<div class="row-fluid">
+							
+							<div class="span2">
+								用户昵称或账号id
+							</div>
+							<div class="span4">
+								<input type="text" class="userInput" placeholder="用户昵称或账号id(留空也可)">
+							</div>
+							
+							<div class="span4">
+								<a class="btn btn-success showUser">搜索</a>
+							</div>
+
+						</div>
+						<hr>
+						<!-- <div class="row-fluid lookuserPage none">
+							
+						</div> -->
+						<small> <b>点击《搜索》后，牛逼的表格操作说明：</b> 1.点击任意表头栏目可排序；2.支持全文检索; <b style="color:#f60">3.怎么查询管理员？留空搜索出结果后点击个人信息可以排序，等级为8的就是</b></small> 
+						<hr>
+						<div class="row-fluid">
+							
+							<div class="userInfoTable-fa">
+								
+								
+							</div>
+						</div>
+					</div>
+					<div class="tab-pane" id="panel-374630">
+						
+						<div class="row-fluid">
+							<div class="span12 creatUser_info none">
+								<input type="text" value="" placeholder="请输入需要提升权限的用户id">
+								<a class="btn btn-success creatUser">新增管理员</a>
+								<a class="btn btn-warning deleteUser">解除管理员</a>
+							</div>
+						</div>
+						<div class="row-fluid">
+							<div class="span6">
+								<hr>
+							
+								<p>	1.权限目前 只有 超级管理员与 普通账户 </p>
+								<p>	2.注册用户逻辑与客户端不同，请到客户端注册</p>
+								<p> 3.新增管理员？输入用户id点击《新增》后即可将其提升为管理员权限</p>
+							</div>
+							
+						</div>
+						
+					</div>
+					<div class="tab-pane" id="panel-374631">
+						<div class="row-fluid">
+							
+							<div class="span12">
+								<p>	昵称： <input class="nickname_mj" type="text" placeholder="请输入昵称"> </p>
+								<p>	密码： <input class="password_mj" type="text" placeholder="请输入密码" value="123456"> </p>
+								<p>	 <a class="btn btn-success createMJ"> 创 建 </a> </p>
+							</div>
+							<div class="span12">
+								<hr>
+
+								<p>	1.输入马甲的［昵称］ </p>
+								<p>	2.设置马甲的［密码］</p>
+								<p> 3.登陆时用［昵称＋密码］验证</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+<% } else{%>
+<section>
+<div class="well">
+	<p>登录失败……</p>
+	<a class='btn btn-primary' href="/">重新登陆</a>
+</div>
+</section>
+<%}%>
+
+
+
+<footer class="container-fluid">
+    <section class="row-fluid">
+
+    </section>
+</footer>
+
+<% include footer.html %>
+
+
+<script>
+
+window.onload=function(){
+
+	seajs.config({
+	base: '/javascripts',
+	alias: {
+		//'boots-jquery':'assets/boots-jquery',
+		//'jquery': 'jquery/jquery/1.10.1/jquery',
+		//'bootstrap':'bootstrap/bootstrap/2.3.2/bootstrap',
+        //"zepto":  "jquery/zepto/1.1.6/zepto",
+        //'datatables' : 'jquery/datatable/1.10.4/jquery.dataTables.js',
+        "all": "share/all/2.0.0/all",
+        'verify':'share/verify/1.0.0/verify',
+        //'e_zetpo':'share/extend/1.0.0/extendzepto',
+	  }
+	})
+	
+    seajs.use([ 'all', 'verify'], function(A,V){
+    	
+
+    	var lookuserPage = $('.lookuserPage'),
+    		nickname_mj = $('.nickname_mj'),
+    		password_mj = $('.password_mj');
+    	$('#tabs-533320').on('click', '.showUser,.userPageNum', function(e){
+    		e.preventDefault();
+
+			$('.userInfoTable-fa').html('<table class="table" id="userInfoTable"></table>');
+
+    		A.ajax('/lookuser', {
+    			value 	: $('.userInput').val(),
+    			p 		: lookuserPage.children('input').val(),
+    		}, '#tabs-533320', function(dataList){
+    			//console.log(dataList);
+    			//var page = dataList.data.page;
+    			//lookuserPage.show().html('<p class="pageinfo">一共<i>'+page.allnews+'</i> 条结果，当前第<em>'+page.currentp+'</em>页，分<b>'+page.pageCount+'</b>页</p><p>跳转到第<input type="text" value="1" placeholder="请输入页码">页 <a class="btn userPageNum"> 确 定 </a></p>');
+    			var u = dataList.data.list,
+    			    ulength = dataList.data.len,
+    			    str = '',
+    			    data_tableArr = [];
+
+    			for (var i = 0; i < ulength; i++) {
+
+    				var status = u[i].status;
+    				var caozuoDom = '<a data-status="'+status+'" class="btn setUser btn-danger">关小黑屋</a>';
+    				if (status==1) {
+    					caozuoDom = '<a data-status="'+status+'" class="btn setUser btn-danger">关小黑屋</a>';
+    				};
+    				if (status==0||status==2) {
+    					caozuoDom = '<a data-status="'+status+'" class="btn setUser btn-warning">释放他出来</a>';
+    				};
+
+    				var new_data = {
+    					xuhao 		: i+1,
+    					nickname 	: '<a target="_blank" href="/soso?userid='+u[i].user_id+'&tab=userzone" data-sex="'+u[i].sex+'" data-level="'+u[i].level+'">'+u[i].nickname+'</a><p><img src="'+A.textTips['host']+u[i].avatar+'" alt="" class="avatar" /></p><p>手机号：'+u[i].mobile+'</p>',
+    					zhanghao 	: '<a href="/soso?userid='+u[i].user_id+'&tab=userzone" target="_blank">'+u[i].user_id+'</a>',
+    					userhome 	: '<p>主页：<a href="/soso?userid='+u[i].user_id+'&tab=userzone" target="_blank">'+u[i].user_id+'</a></p><p>签名：'+u[i].sign+'</p><p>等级：'+u[i].level+'</p><p>性别：'+A.sex[u[i].sex]+'</p><p>地区：'+u[i].province+u[i].city+'</p><p>积分：'+u[i].score+'</p>',
+    					caozuo 		:  caozuoDom,
+    					caozuoren   : u[i].examine_admin,
+    					caozuotime  : '<p>最后登录时间：<br>'+A.js_date_time(u[i].last_time)+'</p><p>账号创建时间：<br>'+A.js_date_time(u[i].ctime)+'</p><p>操作时间：<br>'+A.js_date_time(u[i].examine_time)+'</p>',
+    				}
+					data_tableArr.push(new_data);
+
+    				//str += '';
+    			};
+
+
+				var columnArr = [
+				    { data : 'xuhao'},
+				    { data : 'nickname'},
+				    { data : 'zhanghao'},
+				    { data : 'userhome'},
+				    { data : 'caozuo'},
+				    { data : 'caozuoren'},
+				    { data : 'caozuotime'},
+				];
+
+				/*console.log(data_tableArr);
+
+				console.log(A.install_TB);*/
+				A.install_TB('userInfoTable', data_tableArr, columnArr, '<thead><tr><th>序号</th><th>用户昵称</th><th>用户id</th><th>个人信息</th><th>操作(点击可排序)</th><th>曾操作人</th><th>相关时间</th></tr></thead><tbody></tbody>');
+
+
+    		})
+			//ajax end
+
+    	}).
+		on('click', '.setUser', function(event) {
+			event.preventDefault();
+			//关小黑屋 2 和 释放 0
+
+			var status = $(this).data('status'),
+				value ='0';
+
+
+			var thisUid = $(this).closest('tr').children('td').eq(2).text();
+			var thisDom = $(this);
+
+			//console.log(thisUid);
+
+			if (status==1) {
+				value = 2;//或者 0
+			}else{
+				value = 1;
+			}
+
+			
+			//关小黑屋 设置 禁用用户
+			A.ajax('/up1user', {
+				userid : thisUid,
+				column : "status",
+				value : value,
+			}, '#tabs-533320', function(result){
+
+				var changedRows = result.data.changedRows;
+
+				//console.log(result);
+				if (status==1) {
+					//console.log(status);
+					thisDom.closest('td').html('<a data-status="2" class="btn setUser btn-warning">释放他出来</a>');
+				}else if (status==2) {
+
+					thisDom.closest('td').html('<a data-status="1" class="btn setUser btn-danger">关小黑屋</a>');
+				};
+			})
+
+		}).
+		on('click', '.creatUser', function(event) {
+			event.preventDefault();
+			//creatUser 提升管理员权限
+			var uid = $(this).siblings('input');
+			if (confirm("您确定要将 "+uid.val()+" 提升为管理员吗？")) {
+
+				A.ajax('/up1user', {
+					userid : uid.val(),
+					column : 'level',
+					value : 8,
+				}, '#tabs-533320', function(dataList){
+					if (dataList.data.protocol41) {
+						A.alertHtml('#panel-374630', 'info', dataList.code, dataList.message);
+					};
+				})
+
+			};
+		}).
+		on('click', '.deleteUser', function(event) {
+			event.preventDefault();
+			//
+			var uid = $(this).siblings('input')
+			if (confirm("您确定要将 "+uid.val()+" 解除管理员吗？")) {
+
+				A.ajax('/up1user', {
+					userid : uid.val(),
+					column : 'level',
+					value : 1,
+				}, '#tabs-533320', function(dataList){
+					if (dataList.data.protocol41) {
+						A.alertHtml('#panel-374630', 'info', dataList.code, dataList.message);
+					};
+				})
+
+			};
+		}).
+		on('click', '.createMJ', function(event) {
+			event.preventDefault();
+			// 创建马甲账号
+			if (nickname_mj.val()&&password_mj.val()) {
+
+				A.ajax('/createmini', {
+					nickname : nickname_mj.val(),
+					password : password_mj.val(),
+				}, '#tabs-533320', function(dataList){
+					if (dataList.data.protocol41) {
+						A.alertHtml('#panel-374631', 'info', dataList.code, dataList.message);
+					};
+				})
+			}else{
+				alert('检查输入！')
+			}
+		});
+    	
+
+
+    })
+
+
+}
+</script>
+
+
+

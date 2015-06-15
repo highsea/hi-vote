@@ -1,0 +1,114 @@
+<%=include header.html%>
+
+
+
+<div class="container-narrow">
+
+<header class="container-fluid">
+
+
+</header>
+
+
+
+    <div class="jumbotron">
+        <h1><%=title%></h1>
+
+        
+        
+        <div class="tips"></div>
+
+       
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+            
+            <form class="form-horizontal" action="/postmd5" method="post">
+              <div class="control-group">
+                <label class="control-label">昵称</label>
+                <div class="controls">
+                  <input type="text" name="nickname" placeholder="请输入昵称">
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" >密码</label>
+                <div class="controls">
+                  <input type="password" name="password" placeholder="请输入密码">
+                </div>
+              </div>
+              <div class="control-group">
+                <div class="controls">
+                  <button type="submit" class="btn btn-success"> 管理员登录 </button>
+                </div>
+              </div>
+            </form>
+
+
+        </div>
+    </div>
+    <hr>
+    <br><br><br><br>
+    <!-- <div class="row-fluid">
+         <p>如果想用 id登录 请移步这里 <a class="btn btn-success" href="/login">用id去登陆</a></p>
+        
+    </div> -->
+
+    
+<%=include footer.html%>
+
+
+<script>
+//document.write('<script src=' + ('__proto__' in {} ? 'zepto' : 'jquery') + '.js><\/script>');
+window.onload=function(){
+
+	seajs.config({
+	base: '/javascripts',
+	alias: {
+        //'boots-jquery':'assets/boots-jquery',
+        //"zepto"     :  "jquery/zepto/1.1.6/zepto.min",
+		//'jquery'    : 'jquery/jquery/1.10.1/jquery',
+        'verify'    : 'share/verify/1.0.0/verify',
+        'all'       : 'share/all/2.0.0/all',
+        //'bootstrap' : 'bootstrap/bootstrap/2.3.2/bootstrap.min',
+        //'paginator' : 'bootstrap/paginator/1.0.2/bootstrap-paginator.min'
+	  }
+	});
+
+    seajs.use(['verify', 'all'], function(V,A){
+
+    
+
+        /*var photo = $('.thumbnail').find('.photo').children('p'),
+            time = $('.thumbnail').find('.time').find('span'),
+            photoLength = photo.length;
+            
+        
+
+        for (var i = 0; i < photoLength; i++) {
+            var url = JSON.parse(photo.eq(i).text());
+            var unixtime = time.eq(i).text();
+            var str='';
+
+            if (url.length==1) {
+                str += '<img src=http://m.xiaojiaoyar.com/Uploads/Picture/'+url[0]+'>';
+            }else{
+                for (var k = 0; k < url.length; k++) {
+                    var imgurl = '<img src=http://m.xiaojiaoyar.com/Uploads/Picture/'+url[k]+'>';
+                    str += imgurl;
+                }
+            }
+            photo.eq(i).html(str); 
+
+            time.eq(i).html(A.js_date_time(unixtime));
+
+        };*/
+
+
+    })
+
+}
+
+</script>
+
+
+
