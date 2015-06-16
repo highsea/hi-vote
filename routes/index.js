@@ -10,6 +10,7 @@ var db = require('./../db/mysql_db.js'),
     nodemailer = require('nodemailer'),
     formidable = require('formidable'),
     fs = require('fs'),
+    os = require('os'),
     config = require('./../db/config'),
     utility = require('utility');
 
@@ -844,19 +845,14 @@ exports.soso = function(req, res){
 /*
 @  用户信息获取 lf_user
 @  相关参数 排序：order（时间／积分／最后登录时间） 状态：sta（所有／过滤带id／正常／删除／禁用／管理员）
-@  jsonp
+@  hi-vote jsonp
 @  http://localhost:3000/userinfo?order=time&sta=filter&id=520520&p=1&size=10
 */
 
-//增加6:  账号管理的 操作人（examine_admin） 操作时间 （examine_time）
-//alter table lf_users add examine_time int(13) NOT NULL DEFAULT '0' after ctime;
-//alter table lf_users add examine_admin varchar(15) NOT NULL DEFAULT 'unknow' after ctime;
-//
-
 exports.userinfo = function(req, res){
-    var name = req.session.username;
+    //var name = req.session.username;
 
-    if (name) {
+    //if (name) {
         var doc = {
             order: 'time', 
             sta: 'all'
@@ -872,16 +868,16 @@ exports.userinfo = function(req, res){
         };
         var sql = {
             //status show
-            all         : ' status!="" ',
+            all         : ' hi_vote_baby.level!="" ',
             filter      : ' filter',
-            ready       : ' lf_users.status="1" ',
-            del         : ' lf_users.status="2" ',
-            forbid      : ' lf_users.status="0" ', 
-            admin       : ' lf_users.level="8" ',
+            ready       : ' hi_vote_baby.level="1" ',
+            del         : ' hi_vote_baby.level="0" ',
+            forbid      : ' hi_vote_baby.level="2" ', 
+            admin       : ' hi_vote_baby.level="8" ',
             //order 
-            time        : 'lf_users.ctime',
-            score       : 'lf_users.score',
-            last_time   : 'lf_users.last_time',
+            time        : 'hi_vote_baby.ctime',
+            votenum     : 'hi_vote_baby.vote_num',
+            age         : 'hi_vote_baby.age',
 
         }
         if (sql[req.query.sta]) {
@@ -893,14 +889,14 @@ exports.userinfo = function(req, res){
         if (sql[req.query.sta]&&req.query.sta=='filter') {
             if (req.query.id) {
                 doc['sta'] = 'filter';
-                sql['filter'] = ' lf_users.user_id="'+req.query.id+'" ';
+                sql['filter'] = ' hi_vote_baby.id="'+req.query.id+'" ';
             }else{
                 sql['filter']='';
             }
         };
         var querySQL = {
-            totalSQL : 'select count(*) from lf_users where'+ sql[doc['sta']],
-            userSQL : 'select * from lf_users where '+ sql[doc['sta']]+' order by '+ sql[doc['order']] +' limit '+(page['currentp']-1)*page['size']+', '+page['size'],
+            totalSQL : 'select count(*) from hi_vote_baby where'+ sql[doc['sta']],
+            userSQL : 'select id,name,sex,age,tel,wx_nick,email,wx_id,photo,content,vote_num,ip_reg,ctime,level from hi_vote_baby where '+ sql[doc['sta']]+' order by '+ sql[doc['order']] +' desc limit '+(page['currentp']-1)*page['size']+', '+page['size'],
         }
         
         //分页－－查询总条数
@@ -921,15 +917,15 @@ exports.userinfo = function(req, res){
                 fun.jsonTips(req, res, 2000, config.Code2X[2000], data);
             })
         })
-    }else{
-        res.redirect('/');
-    }
+    //}else{
+    //    res.redirect('/');
+    //}
 } 
 
 /*
 @ 用户信息模糊查询
-@
-@ http://localhost:3000/lookuser?value=hi
+@ hi-vote
+@ http://localhost:4000/lookuser?value=g
 */
 
 //找出u_name中既有“三”又有“猫”的记录，请使用and条件 
@@ -937,11 +933,11 @@ exports.userinfo = function(req, res){
 
 exports.lookuser = function(req, res){
     //验证 管理员&&是否登录
-    fun.verifyAdmin(req, res, function(){
+    //fun.verifyAdmin(req, res, function(){
 
         var page = {currentp:1,size:20};
         var doc = {
-            type : 'userid',
+            type : 'name',
         }
         //查看哪页
         if(fun.isDigit(req.query.p)){
@@ -954,29 +950,35 @@ exports.lookuser = function(req, res){
 
 
         var querySQL = {
-            userid   : 'select * from lf_users',
-            nickname : 'select * from lf_users',
-            totalSQL : 'select count(*) from lf_users',
+            //暂不开放 对 id 的检索
+            tel   : 'select * from hi_vote_baby',
+            name : 'select * from hi_vote_baby',
+            totalSQL : 'select count(*) from hi_vote_baby',
         }
 
 
 
-        if (fun.isDigit(req.query.value)) {
-            doc['type'] = 'userid';
-            querySQL['userid'] =  'select * from lf_users where user_id='+req.query.value; 
+        /*if (fun.isDigit(req.query.value)) {
+            doc['type'] = 'tel';
+            querySQL['tel'] =  'select * from hi_vote_baby where tel='+req.query.value; 
             // 单条信息
-            querySQL['totalSQL'] = 'select count(*) from lf_users where user_id='+req.query.value; 
+            querySQL['totalSQL'] = 'select count(*) from hi_vote_baby where tel='+req.query.value; 
             
 
         }
         if (!fun.isDigit(req.query.value)) {
-            doc['type'] = 'nickname';
+            doc['type'] = 'name';
 
-            querySQL['nickname'] = 'select * from lf_users where nickname like "%'+req.query.value+'%" ';
-            querySQL['totalSQL'] = 'select count(*) from lf_users where nickname like "%'+req.query.value+'%" ';
-        }
+            querySQL['name'] = 'select * from hi_vote_baby where name like "%'+req.query.value+'%" ';
+            querySQL['totalSQL'] = 'select count(*) from hi_vote_baby where name like "%'+req.query.value+'%" ';
+        }*/
         // 如果 包含 空格／＋／等组合查询 ［待优化］
 
+        if (req.query.value) {
+            doc['type'] = 'name';
+            querySQL['name'] = 'select name,sex,age,tel,wx_nick,email,wx_id,photo,content,vote_num,ip_reg,ctime from hi_vote_baby where name like "%'+req.query.value+'%" ';
+            querySQL['totalSQL'] = 'select count(*) from hi_vote_baby where name like "%'+req.query.value+'%" ';
+        };
 
 
         
@@ -1000,7 +1002,7 @@ exports.lookuser = function(req, res){
         })
 
 
-    })
+    //})
 } 
 
 
@@ -1782,9 +1784,9 @@ exports.weixin = function(req, res, next){
         nowtime : fun.nowUnix(),
         //sha1    : 'sha1',
     }
-    console.log('初始化的 doc：');
+    //console.log('初始化的 doc：');
 
-    console.log(doc);
+    //console.log(doc);
 
     // 可选 appid
     if (req.query.appid) {
@@ -1973,11 +1975,108 @@ exports.register = function(req, res){
 }
 
 /*
+@  获取广域网 ip
+@  hi-vote
+@  http://localhost:4000/getip
+*/
+
+exports.getip = function(req, res){
+
+    /*var externalip = require('externalip'),
+        resultIP = '';*/
+
+    /*externalip(function (err, ip) {
+        if (err) {
+            resultIP = err;
+        }else{
+            resultIP = ip;
+        }
+        console.log(ip); // => 8.8.8.8
+        fun.jsonTips(req, res, 2000, config.Code2X[2000], resultIP);
+    });*/
+
+    //var clientIp = fun.getClientIp(req, res);
+
+    //console.log(os.networkInterfaces());
+    //http://pv.sohu.com/cityjson
+
+    var publicIp = require('public-ip');
+
+    publicIp(function (err, ip) {
+        console.log(ip);
+        if (err) {
+            resultIP = err;
+        }else{
+            resultIP = ip;
+        }
+        if (resultIP=='') {
+            //5022
+            fun.jsonTips(req, res, 5022, config.Code2X[5022], resultIP);
+
+        }else{
+            fun.jsonTips(req, res, 2000, config.Code2X[2000], resultIP);
+
+        }
+    });
+
+    /*function getLocalIP() {
+    var map = [];
+    var ifaces = os.networkInterfaces();
+    //console.log(ifaces);
+    for (var dev in ifaces) {
+        if (dev.indexOf('eth0') != -1) {
+            var tokens = dev.split(':');
+            var dev2 = null;
+            if (tokens.length == 2) {
+                dev2 = 'eth1:' + tokens[1];
+            } else if (tokens.length == 1) {
+                dev2 = 'eth1';
+            }
+            if (null == ifaces[dev2]) {
+                continue;
+            }
+            // 找到eth0和eth1分别的ip 
+            var ip = null, ip2 = null;
+            ifaces[dev].forEach(function(details) {
+                if (details.family == 'IPv4') {
+                    ip = details.address;
+                }
+            });
+            ifaces[dev2].forEach(function(details) {
+                if (details.family == 'IPv4') {
+                    ip2 = details.address;
+                }
+            });
+            if (null == ip || null == ip2) {
+                continue;
+            }
+            // 将记录添加到map中去
+            if (ip.indexOf('10.') == 0 ||
+                ip.indexOf('172.') == 0 ||
+                ip.indexOf('192.') == 0) {
+                map.push({"intranet_ip" : ip, "internet_ip" : ip2});
+            } else {
+                map.push({"intranet_ip" : ip2, "internet_ip" : ip});
+            }
+        }
+    }  
+    return map;
+    }
+    console.log(getLocalIP());*/
+    
+
+}
+
+
+
+
+
+/*
 @ hi-vote 新增 create 前台注册用户 （单个）[ 需要联合 checktel checkemail checkname 保证 name email tel 的唯一性]
 @ query {user:string,password:string,sex:number,email:string,iphone:sting}
 @ html demo http://jk.idacker.com:3000/register
 @ jsonp http://localhost:3000/adduser?name=name&password=123456
-@ http://localhost:3000/adduser?name=test1&password=123456&sex=1&age=5&tel=15161789856&email=admin@highsea90.com&photo=[%22http://a.com%22,%20%22http://b.com%22]&content=ceshi
+@ http://localhost:3000/adduser?name=test1&password=123456&sex=1&age=5&tel=15161789856&email=admin@highsea90.com&photo=[%22http://a.com%22,%20%22http://b.com%22]&content=ceshi&ip=192.168.1.244
 */
 
 exports.adduser = function(req, res){
@@ -1986,7 +2085,8 @@ exports.adduser = function(req, res){
     //还是靠 input.type=hidden.name=sexval 解决
     //console.log(sex);
 
-    if(req.query.name&&req.query.password){
+    if(req.query.name){
+        //&&req.query.password
 
         var doc = {
             sex     : 0,
@@ -1996,20 +2096,29 @@ exports.adduser = function(req, res){
             photo   : config.dbtext['error-logo'],
             content : config.dbtext['dd'],
             ctime   : fun.nowUnix(),
+            ip_reg  : '',
+            password: '123456',
             level   : 1,//前台注册的账户为 普通用户
+            wx_nick : config.dbtext['wz'],
+            wx_id   : config.dbtext['null'],
         }
         if (req.query.sex) doc['sex']        = req.query.sex;
         if (req.query.age) doc['age']        = req.query.age;
         if (req.query.tel) doc['tel']        = req.query.tel;
         if (req.query.email) doc['email']    = req.query.email;
         if (req.query.photo) doc['photo']    = JSON.parse(req.query.photo);
+        if (req.query.ip) doc['ip_reg']      = req.query.ip;
+        if (req.query.wx_nick) doc['wx_nick']= req.query.wx_nick;
+        if (req.query.wx_id) doc['wx_id']    = req.query.wx_id;
+
+
         if (req.query.content) doc['content']= req.query.content;
 
         var key = config.productInfo.key,
-            resultMD5 = fun.passwordMD5(req.query.password, key);
+            resultMD5 = fun.passwordMD5(doc['password'], key);
 
         var sql = {
-            insert : "insert into hi_vote_baby (name, password, sex, age, tel, email, photo, content, ctime, level) values ('"+req.query.name+"', '"+resultMD5+"', '"+doc['sex']+"', '"+doc['age']+"', '"+doc['tel']+"', '"+doc['email']+"', '"+doc['photo']+"', '"+doc['content']+"', '"+fun.nowUnix()+"', '"+doc['level']+"')",
+            insert : "insert into hi_vote_baby (name, password, sex, age, tel, email, photo, content, ip_reg, ctime, level, wx_nick, wx_id) values ('"+req.query.name+"', '"+resultMD5+"', '"+doc['sex']+"', '"+doc['age']+"', '"+doc['tel']+"', '"+doc['email']+"', '"+doc['photo']+"', '"+doc['content']+"', '"+doc['ip_reg']+"','"+fun.nowUnix()+"', '"+doc['level']+"', '"+doc['wx_nick']+"', '"+doc['wx_id']+"')",
         };
 
 
@@ -2027,14 +2136,14 @@ exports.adduser = function(req, res){
 @ hi-vote 符合某条件的数量 count 查询 分类+值 多功能接口（可用户 新建 删除相关分类数据）
 @ countname /get/ query.name 数据库字段名称
 @ countvalue /get/ query.value 该字段的值
-@ http://localhost:3000/userCount?name=name&value=hi-vote
+@ http://localhost:3000/userCount?name=name&value=hi-v
 */
 exports.usercount = function (req, res){
 
-    if (req.query.name&&req.query.value) {
+    if (req.query.type&&req.query.value) {
 
         var doc = {
-            countname  : req.query.name,
+            countname  : req.query.type,
             countvalue : req.query.value,
         }
 
@@ -2044,9 +2153,9 @@ exports.usercount = function (req, res){
             email   : 'email ="'+doc['countvalue']+'"',
         }
 
-        if (sql[req.query.name]) {
+        if (sql[req.query.type]) {
 
-            var sqlResult = 'select count(*) from hi_vote_baby where '+sql[doc['countname']]+' limit 1';
+            var sqlResult = 'select count(*) from hi_vote_baby where '+sql[doc['countname']]+' limit 10';
             console.log(sqlResult);
 
             db.query(sqlResult, function(result){
@@ -2256,89 +2365,126 @@ exports.sessionuser = function(req, res){
 
 
 
-//get 删除 remove 用户
-exports.remove1user = function(req, res){
-
-    fun.login_verify(req, res, function (){
-
-        database.userlist.count({_id:req.query.id}, function(err, doc){
-            if (err) {
-                fun.jsonTips(req, res, 5001, err, '');
-            }else{
-                if (doc) {
-                    database.userlist.remove({_id: req.query.id}, function(error){
-                        fun.jsonTips(req, res, 2000, config.Code2X[2000], '');
-                    });
-                }else{
-                    fun.jsonTips(req, res, 4015, config.Code2X[4015], '');
-                }
-            }
-        });
-    });
-}
-
 /*
-//更改 update 单个用户信息 get
-exports.up1user = function(req, res){
-
-    fun.login_verify(req, res, function (){
-
-        fun.add_update_verify(req, res,function(){
-            var r = req.query,
-                doc = {name:r.user, password:r.password, type:r.type};
-            database.userlist.update({_id:r.id}, doc, {}, function(error){
-
-                fun.json_api(req, res, error, {id:r.id, now:doc});
-
-            });
-        });
-    });
-}
+@  投票信息查询
+@  hi-vote
+@  http://localhost:4000/govote?ip=192.168.11.13&babyid=1
 */
+exports.govote = function(req, res){
+    
+    if (req.query.babyid&&req.query.ip) {
 
-//路由get 新增 后台管理员添加 create 用户
-exports.adduserget = function(req, res){
-
-    fun.login_verify(req, res, function(){
-
-        fun.add_update_verify(req, res,function(){
-            var r = req.query;
-            var doc = {
-                name        : r.user,
-                password    : r.password,
-                content     : r.content,
-                age         : r.age,
-                city        : r.city,
-                email       : r.email,
-                type        : r.type
+        var sql = {
+            vote : 'insert into hi_vote_info (ip_vote, baby_id, ctime) values ("'+req.query.ip+'", "'+req.query.babyid+'", "'+fun.nowUnix()+'")',
+            baby : 'update hi_vote_baby set vote_num=vote_num+1, ip_reg="'+req.query.ip+'" where id="'+req.query.babyid+'"',
+        };
+        db.query(sql['vote'], function(result){
+            console.log(result);
+            if (result.protocol41) {
+                db.query(sql['baby'], function(data){
+                    fun.jsonTips(req, res, 2000, config.Code2X[2000], data);
+                })
             };
-            //console.log(doc);
 
-            database.userlist.count({name:r.user}, function(err, result){
-                if (err) {
-                    fun.jsonTips(req, res, 5001, err, '');
-                }else{
-                    
-                    if (result) {
-                        fun.jsonTips(req, res, '2014', 'user exist', '用户已经存在');
-                    }else{
-                        //插入数据库
-                        database.userlist.create(doc, function(error){
-                            fun.json_api(req, res, error, {id:r.id, now:doc});
-                        })
-                    }
-                }
-            })
+/*{ fieldCount: 0,
+  affectedRows: 1,
+  insertId: 6,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '',
+  protocol41: true,
+  changedRows: 0 }*/
 
         })
-    })
+    }else{
+        fun.jsonTips(req, res, 1025, config.Code1X[1025], null);
+    }
 }
+
+/*
+@ 投票详情查询
+@
+@
+*/
+exports.voteinfo = function(req, res){
+
+}
+
+
+/*
+@ 上传页面 post 
+@ hi-vote  http://localhost:4000/postpic
+*/
+exports.postpic = function(req, res) {
+
+    var q = req.body,
+        picname = q.picname;
+    
+    var form = new formidable.IncomingForm();
+    form.encoding = 'utf-8';        //设置编辑
+    form.uploadDir = picPATH;     //设置上传目录
+    form.keepExtensions = true;     //保留后缀
+    form.maxFieldsSize = 2 * 1024 * 1024;   //文件大小
+
+    form.parse(req, function(err, fields, files){
+
+        if (err) {
+            fun.jsonTips(req, res, 1026, config.Code1X[1026], err);
+        }else{
+
+            if(files['files']!=undefined){
+                // http://localhost:3000/upload [post]
+
+                var extName = '';  //后缀名
+                switch (files.files.type) {
+                    case 'image/jpg':
+                        extName = 'jpg';
+                        break;
+                    case 'image/jpeg':
+                        extName = 'jpeg';
+                        break;         
+                    case 'image/png':
+                        extName = 'png';
+                        break;
+                    case 'image/x-png':
+                        extName = 'png';
+                        break; 
+                    case 'image/gif':
+                        extName = 'gif';        
+                }
+
+                if (extName=='') {
+                    //不允许的文件
+                    fun.jsonTips(req, res, 1027, config.Code1X[1027], null);
+                }else{
+                    //console.log('username:'+username);
+                    //req.session.username+'_'+
+                    var resultPic = fun.nowUnix()+'.'+extName;
+                    try{
+                        fs.renameSync(files.files.path, picPATH+resultPic);
+                        //fun.uploadHtml(req, res, resultPic, username);
+                        fun.jsonTips(req, res, 2000, config.Code2X[2000], resultPic);
+                    }catch(e){
+                        fun.jsonTips(req, res, 5021, config.Code5X[5021], e);
+                    }
+                    //fun.jsonTips(req, res, 2000, config.Code2X[2000], 'test');
+                }
+
+            }else{
+                // http://localhost:3000/upload [get]
+                fun.jsonTips(req, res, 1025, config.Code1X[1025], null);
+            }
+        }
+    });
+};   
+
+
 
 
 
 /*
-@ 上传页面 需要登录
-@
+@ 上传页面 iframe
+@ hi-vote  http://localhost:4000/upload?username=aaa
 */
 exports.upload = function(req, res) {
 
@@ -2391,8 +2537,9 @@ exports.upload = function(req, res) {
                         //不允许的文件
                         fun.jsonTips(req, res, 1027, config.Code1X[1027], null);
                     }else{
-
-                        var resultPic = req.session.username+'_'+fun.nowUnix()+'.'+extName;
+                        //console.log('username:'+username);
+                        //req.session.username+'_'+
+                        var resultPic = fun.nowUnix()+'.'+extName;
                         try{
                             fs.renameSync(files.files.path, picPATH+resultPic);
                             fun.uploadHtml(req, res, resultPic, username);
@@ -2415,13 +2562,13 @@ exports.upload = function(req, res) {
         // http://localhost:3000/upload?username=right
         console.log('上传页面');
 
-        if (req.session.username==username) {
+        //if (req.session.username==username) {
             fun.uploadHtml(req, res, '1', username);
 
-        } else{
+        //} else{
             //  http://localhost:3000/upload?username=nothing
-            fun.jsonTips(req, res, 2005, config.Code2X[2005], null);
-        };
+            //fun.jsonTips(req, res, 2005, config.Code2X[2005], null);
+        //};
     };
     
 };     
@@ -2455,6 +2602,11 @@ exports.upload = function(req, res) {
 // }
         // 同步操作文件，需要try catch
 
+
+/*
+@ 获取 图片
+@ hi-vote
+*/
 exports.getpic = function(req, res){
 
     if (req.query.picname) {

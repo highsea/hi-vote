@@ -263,7 +263,36 @@ function yymmdd(){
 }   
 
 
+/*
+@ get Client Ip
+@
+@
+*/
+function getClientIp(req, res) {
+    /*var ipArr = {
+        forwarded : req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'] : 'null',
+        connection : req.connection.remoteAddress ? req.connection.remoteAddress : 'null',
+        socket : req.socket.remoteAddress ? req.socket.remoteAddress : 'null',
+        connection_socket : req.connection.socket.remoteAddress ? req.connection.socket.remoteAddress : 'null',
+    }*/
 
+    var ipAddress;
+    var headers = req.headers;
+    var forwardedIpsStr = headers['x-real-ip'] || headers['x-forwarded-for'];
+    forwardedIpsStr ? ipAddress = forwardedIpsStr : ipAddress = null;
+    if (!ipAddress) {
+        ipAddress = req.connection.remoteAddress;
+    }
+    return ipAddress;
+    /*return  req.headers['x-forwarded-for']||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    req.connection.socket.remoteAddress;*/
+};
+
+
+
+exports.getClientIp         = getClientIp;
 exports.generateMixed       = generateMixed; 
 exports.toUnix              = toUnix;
 exports.sign                = sign;

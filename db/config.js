@@ -88,6 +88,7 @@ var dbLogin = 'mongodb://xjy:xjy123@localhost:27017/xiaojiaoyar',
 		5020:'success',
 		5019:'内部错误：',
 		5021: '写入错误',
+		5022: '请求错误，请重试',
 	},
 	//领域左起0-1位是一级分类，左起2-3位是二级分类，4-5是三级分类
 	scopeList = {
@@ -160,6 +161,7 @@ var dbLogin = 'mongodb://xjy:xjy123@localhost:27017/xiaojiaoyar',
 		'error-logo':'upload/error-logo.gif',
 		'error-com':'未知的公司',
 		'wz':'未知',
+		'null':'null',
 		'token':'hicms',
 	};
 

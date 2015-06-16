@@ -121,7 +121,9 @@ app.get('/users', user.list);
 // hi-vote 投票
 app.get('/adduser',routes.adduser);
 app.get('/usercount', routes.usercount);
-
+app.get('/getip', routes.getip);
+app.post('/postpic', routes.postpic);
+app.get('/govote', routes.govote);
 
 
 
@@ -191,7 +193,6 @@ app.get('/getuser', routes.getuser);//by id 二次登陆
 app.get('/userbyname', routes.userbyname);// name 二次登陆
 app.get('/sessionuser', routes.sessionuser);// 当前登录用户
 
-app.get('/remove1user', routes.remove1user);
 app.get('/oneuser', routes.oneuser);
 
 

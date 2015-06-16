@@ -28,7 +28,8 @@
     "cookie-parser": "*",
     "superagent": "^1.2.0",
     "cheerio": "^0.19.0",
-    "jssha":"*"
+    "jssha": "*",
+    "public-ip": "^1.0.2"
   },
   "devDependencies": {
     "grunt": "^0.4.5"
