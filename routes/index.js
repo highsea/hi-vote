@@ -2097,7 +2097,7 @@ exports.adduser = function(req, res){
             content : config.dbtext['dd'],
             ctime   : fun.nowUnix(),
             ip_reg  : '',
-            password: '123456',
+            //password: '123456',
             level   : 1,//前台注册的账户为 普通用户
             wx_nick : config.dbtext['wz'],
             wx_id   : config.dbtext['null'],
@@ -2114,11 +2114,11 @@ exports.adduser = function(req, res){
 
         if (req.query.content) doc['content']= req.query.content;
 
-        var key = config.productInfo.key,
-            resultMD5 = fun.passwordMD5(doc['password'], key);
+        //var key = config.productInfo.key,
+            //resultMD5 = fun.passwordMD5(doc['password'], key);
 
         var sql = {
-            insert : "insert into hi_vote_baby (name, password, sex, age, tel, email, photo, content, ip_reg, ctime, level, wx_nick, wx_id) values ('"+req.query.name+"', '"+resultMD5+"', '"+doc['sex']+"', '"+doc['age']+"', '"+doc['tel']+"', '"+doc['email']+"', '"+doc['photo']+"', '"+doc['content']+"', '"+doc['ip_reg']+"','"+fun.nowUnix()+"', '"+doc['level']+"', '"+doc['wx_nick']+"', '"+doc['wx_id']+"')",
+            insert : "insert into hi_vote_baby (name, sex, age, tel, email, photo, content, ip_reg, ctime, level, wx_nick, wx_id) values ('"+req.query.name+"', '"+doc['sex']+"', '"+doc['age']+"', '"+doc['tel']+"', '"+doc['email']+"', '"+doc['photo']+"', '"+doc['content']+"', '"+doc['ip_reg']+"','"+fun.nowUnix()+"', '"+doc['level']+"', '"+doc['wx_nick']+"', '"+doc['wx_id']+"')",
         };
 
 
@@ -2366,36 +2366,52 @@ exports.sessionuser = function(req, res){
 
 
 /*
-@  投票信息查询
+@  参与投票
 @  hi-vote
-@  http://localhost:4000/govote?ip=192.168.11.13&babyid=1
+@  http://localhost:4000/govote?ip=192.168.11.13&babyid=1&wxid=weq2313
 */
 exports.govote = function(req, res){
     
-    if (req.query.babyid&&req.query.ip) {
+    if (req.query.babyid&&req.query.ip&&req.query.wxid) {
 
         var sql = {
-            vote : 'insert into hi_vote_info (ip_vote, baby_id, ctime) values ("'+req.query.ip+'", "'+req.query.babyid+'", "'+fun.nowUnix()+'")',
+            count : 'select count(*) from hi_vote_info where wxid="'+req.query.wxid+'" and ctime between '+fun.dayAgo(1)+' and '+fun.nowUnix(),
+            babayCount : 'select count(*) from hi_vote_info where wxid="'+req.query.wxid+'" and baby_id="'+req.query.babyid+'" and ctime between '+fun.dayAgo(1)+' and '+fun.nowUnix(),
+            vote : 'insert into hi_vote_info (wxid, ip_vote, baby_id, ctime) values ("'+req.query.wxid+'", "'+req.query.ip+'", "'+req.query.babyid+'", "'+fun.nowUnix()+'")',
             baby : 'update hi_vote_baby set vote_num=vote_num+1, ip_reg="'+req.query.ip+'" where id="'+req.query.babyid+'"',
         };
-        db.query(sql['vote'], function(result){
-            console.log(result);
-            if (result.protocol41) {
-                db.query(sql['baby'], function(data){
-                    fun.jsonTips(req, res, 2000, config.Code2X[2000], data);
+        db.query(sql['count'], function(countNum){
+            var count = countNum[0]['count(*)'];
+
+            //时间防刷
+
+
+
+            //每天只能投10票以内
+            if (count<10) {
+
+                db.query(sql['babayCount'], function(babyNum){
+                    //每个 baby 只能投3票以内
+                    if (babyNum[0]['count(*)']<3) {
+                        db.query(sql['vote'], function(result){
+                            console.log(result);
+                            if (result.protocol41) {
+                                db.query(sql['baby'], function(data){
+                                    fun.jsonTips(req, res, 2000, config.Code2X[2000], data);
+                                })
+                            };
+                        })
+
+                    }else{
+                        fun.jsonTips(req, res, 1029, config.Code1X[1029], null);
+                    }
                 })
-            };
-
-/*{ fieldCount: 0,
-  affectedRows: 1,
-  insertId: 6,
-  serverStatus: 2,
-  warningCount: 0,
-  message: '',
-  protocol41: true,
-  changedRows: 0 }*/
-
+            }else{
+                fun.jsonTips(req, res, 1028, config.Code1X[1028], null);
+            }
+            //end 票数的防刷
         })
+        
     }else{
         fun.jsonTips(req, res, 1025, config.Code1X[1025], null);
     }
