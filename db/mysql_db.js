@@ -52,7 +52,7 @@ function query (sql, callback) {
         con.query(sql, function(err, rows, fields) {
             if (err) {
             	throw err;
-            	fun.friendlyError(req, res, err);
+            	fun.jsonTips(req, res, 5022, config.Code5X[5022], err);
             }else{
             	callback(rows);
             }

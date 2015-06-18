@@ -976,7 +976,7 @@ exports.lookuser = function(req, res){
 
         if (req.query.value) {
             doc['type'] = 'name';
-            querySQL['name'] = 'select name,sex,age,tel,wx_nick,email,wx_id,photo,content,vote_num,ip_reg,ctime from hi_vote_baby where name like "%'+req.query.value+'%" ';
+            querySQL['name'] = 'select id,name,sex,age,tel,wx_nick,email,wx_id,photo,content,vote_num,ip_reg,ctime,level from hi_vote_baby where name like "%'+req.query.value+'%" ';
             querySQL['totalSQL'] = 'select count(*) from hi_vote_baby where name like "%'+req.query.value+'%" ';
         };
 
@@ -2385,8 +2385,6 @@ exports.govote = function(req, res){
 
             //时间防刷
 
-
-
             //每天只能投10票以内
             if (count<10) {
 
@@ -2425,6 +2423,92 @@ exports.govote = function(req, res){
 exports.voteinfo = function(req, res){
 
 }
+
+
+/*
+@ 根据 id 查询 单条宝贝信息
+@
+@
+*/
+exports.onebaby = function(req, res){
+
+    if (req.query.id) {
+
+        var sql = 'select id,name,sex,age,tel,wx_nick,email,wx_id,photo,content,vote_num,ip_reg,ctime,level from hi_vote_baby where id ="'+req.query.id+'" limit 1';
+
+        db.query(sql, function(data){
+            fun.jsonTips(req, res, 2000, config.Code2X[2000], data);
+        })
+
+    }else{
+        fun.jsonTips(req, res, 1025, config.Code1X[1025], null);
+    }
+}
+
+
+/*
+@ 页面pv写入
+@ alter table hi_vote_pvip add ctime int(18) NOT NULL DEFAULT '0' after ip;
+@
+*/
+exports.cpv = function(req, res){
+
+    if (req.query.ip&&req.query.pageid) {
+
+        var sql = 'insert into hi_vote_pvip (ip, page_id, ctime) values ("'+req.query.ip+'", "'+req.query.pageid+'", "'+fun.nowUnix()+'")';
+
+        db.query(sql, function(data){
+            fun.jsonTips(req, res, 2000, config.Code2X[2000], data);
+        })
+
+    }else{
+       fun.jsonTips(req, res, 1025, config.Code1X[1025], null); 
+    }
+}
+
+/*
+@ 页面pv查询
+@
+@  http://localhost:4000/spv?pageid=100001
+*/
+exports.spv = function(req, res){
+
+    if (req.query.pageid) {
+        var sql = 'select count(*) from hi_vote_pvip where page_id = "'+req.query.pageid+'"';
+
+        db.query(sql, function(dataList){
+            fun.jsonTips(req, res, 2000, config.Code2X[2000], dataList[0]['count(*)']);
+        })
+    }else{
+       fun.jsonTips(req, res, 1025, config.Code1X[1025], null);  
+    }
+}
+
+/*
+@ 报名人数查询以及投票人数查询
+@
+@  http://localhost:4000/spv?pageid=100001
+*/
+exports.sbabyvote = function(req, res){
+
+    var sql = {
+        register : 'select count(*) from hi_vote_baby',
+        vote : 'select count(*) from hi_vote_info ' ,
+    }
+    db.query(sql['register'], function(registerData){
+
+        db.query(sql['vote'], function(voteData){
+
+            var data = {
+                registerNum : registerData[0]['count(*)'],
+                vote        : voteData[0]['count(*)'],
+            }
+            fun.jsonTips(req, res, 2000, config.Code2X[2000], data);
+        })
+    })
+}
+
+
 
 
 /*

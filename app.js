@@ -124,7 +124,10 @@ app.get('/usercount', routes.usercount);
 app.get('/getip', routes.getip);
 app.post('/postpic', routes.postpic);
 app.get('/govote', routes.govote);
-
+app.get('/onebaby', routes.onebaby);
+app.get('/cpv', routes.cpv);
+app.get('/spv', routes.spv);
+app.get('/sbabyvote', routes.sbabyvote);
 
 
 // 项目路由
