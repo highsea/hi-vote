@@ -128,6 +128,9 @@ app.get('/onebaby', routes.onebaby);
 app.get('/cpv', routes.cpv);
 app.get('/spv', routes.spv);
 app.get('/sbabyvote', routes.sbabyvote);
+app.get('/wx_auth_token', routes.wx_auth_token);
+app.get('/wx_refresh_token', routes.wx_refresh_token);
+app.get('/wx_userinfo', routes.wx_userinfo);
 
 
 // 项目路由

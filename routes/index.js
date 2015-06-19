@@ -1922,6 +1922,116 @@ exports.sha1 = function(req,res){
     
 }
 
+/*
+@   获取 授权登录的 access_token 不同于 sdk 基础支持中的 token
+@
+@  http://192.168.31.248:4000/wx_auth_token?code=0313d240786f8c4cda3b1779f05c248x
+*/
+exports.wx_auth_token = function(req, res){
+
+    if (req.query.code) {
+
+        var cheerio = require('cheerio');
+        var superagent = require('superagent');
+
+        var ticket = fs.statSync(appsetFile);
+        var ticketObj = JSON.parse(fs.readFileSync(appsetFile), 'utf8', function(err, data){});
+
+        var doc = {
+            appid   : ticketObj.weixin.appid,//'wx65deb1c87416d0b7',//
+            secret  : ticketObj.weixin.secret,//'dbffe63e1ce024dcf8bcf1c93678c8eb',//
+        }
+
+        superagent.get('https://api.weixin.qq.com/sns/oauth2/access_token?appid='+doc['appid']+'&secret='+doc['secret']+'&code='+req.query.code+'&grant_type=authorization_code')
+                .end(function(error, result){
+                    if (error) {
+                        return next(error)
+                    };
+
+                    fun.jsonTips(req, res, 2000, config.Code2X[2000], JSON.parse(result.text));
+                })
+    }else{
+        fun.jsonTips(req, res, 1025, config.Code1X[1025], null);
+    }
+
+}
+
+
+
+
+/*
+@   获取 授权登录的 refresh_token 
+@
+@  
+*/
+exports.wx_refresh_token = function(req, res){
+
+    if (req.query.token) {
+
+        var cheerio = require('cheerio');
+        var superagent = require('superagent');
+
+        var ticket = fs.statSync(appsetFile);
+        var ticketObj = JSON.parse(fs.readFileSync(appsetFile), 'utf8', function(err, data){});
+
+        var doc = {
+            appid   : ticketObj.weixin.appid,//'wx65deb1c87416d0b7',//
+            secret  : ticketObj.weixin.secret,//'dbffe63e1ce024dcf8bcf1c93678c8eb',//
+        }
+
+//?appid=APPID
+
+        superagent.get('https://api.weixin.qq.com/sns/oauth2/refresh_token?appid='+doc['appid']+'&grant_type=refresh_token&refresh_token='+req.query.token)
+                .end(function(error, result){
+                    if (error) {
+                        return next(error)
+                    };
+
+                    fun.jsonTips(req, res, 2000, config.Code2X[2000], JSON.parse(result.text));
+                })
+    }else{
+        fun.jsonTips(req, res, 1025, config.Code1X[1025], null);
+    }
+
+}
+
+
+
+/*
+@   获取 微信个人信息 
+@
+@  
+*/
+exports.wx_userinfo = function(req, res){
+
+    if (req.query.openid&&req.query.token) {
+
+        var cheerio = require('cheerio');
+        var superagent = require('superagent');
+
+//?appid=APPID
+
+        superagent.get('https://api.weixin.qq.com/sns/userinfo?access_token='+req.query.token+'&openid='+req.query.openid+'&lang=zh_CN')
+                .end(function(error, result){
+                    if (error) {
+                        return next(error)
+                    };
+
+                    fun.jsonTips(req, res, 2000, config.Code2X[2000], JSON.parse(result.text));
+                })
+    }else{
+        fun.jsonTips(req, res, 1025, config.Code1X[1025], null);
+    }
+
+}
+
+
+
+
+
+
+
+
 exports.wxinit = function(req, res){
 
     //验证 管理员&&是否登录
